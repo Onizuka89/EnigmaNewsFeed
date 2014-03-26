@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="match_parent"
+              style="@style/AppTheme" >
+
+    <TextView android:id="@+id/elemtitle"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:text="@android:string/unknownName"
+        android:textStyle="bold"
+        android:textSize="30dp"
+        style="@style/BlackText"/>
+
+    <TextView android:id="@+id/elemlink"
+              android:layout_height="wrap_content"
+              android:layout_width="fill_parent"
+              android:layout_below="@id/elemtitle"
+              android:text="@android:string/unknownName"
+              style="@style/BlackText"
+              android:textColorLink="@android:color/holo_blue_dark"
+        />
+
+    <TextView android:id="@+id/elemsnippet"
+              android:layout_height="wrap_content"
+              android:layout_width="fill_parent"
+              style="@style/BlackText"
+              android:layout_below="@id/elemlink"
+        />
+</RelativeLayout>
