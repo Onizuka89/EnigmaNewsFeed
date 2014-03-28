@@ -5,7 +5,11 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.util.Linkify;
 import android.util.Log;
-import android.view.*;
+import android.view.View;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.os.AsyncTask;
 
 import java.io.BufferedReader;
@@ -59,26 +63,27 @@ public class MainActivity extends ActionBarActivity {
             public View getView(int position, View convertView, ViewGroup parent) {
                 LayoutInflater inflater= LayoutInflater.from(context);
                 RelativeLayout view = (RelativeLayout) inflater.inflate(R.layout.listrow, listView, false);
-                TextView textView = (TextView) view.findViewById(R.id.elemtitle);
-                Entry entry = entries_array.get(position);
-                if(null == entry) {
-                    Log.d(TAG,"Entry is Null at index " + position);
-                }else if (null == textView) {
-                    Log.d(TAG,"No textview!!!!!");
-                }
                 try {
+                    assert view != null;
+                    TextView textView = (TextView) view.findViewById(R.id.elemtitle);
+                    Entry entry = entries_array.get(position);
+                    if (null == entry) {
+                        throw new Exception("Entry is Null at index " + position);
+                    }
+                    if (null == textView) {
+                        throw new Exception("Could not find the textView in listrow layout.");
+                    }
                     textView.setText(entry.title);
                     textView = (TextView) view.findViewById(R.id.elemlink);
                     textView.setText(entry.link);
                     Linkify.addLinks(textView, Linkify.ALL);
-
                     textView = (TextView) view.findViewById(R.id.elemsnippet);
                     textView.setText(entry.snippet);
                     return view;
-                }catch (NullPointerException e){
-                    Log.e(TAG,"Nullpoint error exception in getView!");
-                    return null;
+                }catch(Exception e){
+                    Log.e(TAG, e.getMessage());
                 }
+                return null;
             }
         });
         context = this;
@@ -110,10 +115,7 @@ public class MainActivity extends ActionBarActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     private static class RetrieveJSONFeed extends AsyncTask<String, Void, String>{
@@ -150,7 +152,7 @@ public class MainActivity extends ActionBarActivity {
 
     public static void update_listview(){
         JsonParser parser = new JsonParser();
-        Log.d("TAG",json);
+        Log.d(TAG,json);
         JsonElement element = parser.parse(json);
         while(!entries_array.isEmpty()){
             entries_array.remove(0);
