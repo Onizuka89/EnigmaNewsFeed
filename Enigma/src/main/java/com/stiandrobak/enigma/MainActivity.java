@@ -1,6 +1,9 @@
 package com.stiandrobak.enigma;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.util.Linkify;
@@ -27,9 +30,10 @@ import com.google.gson.JsonObject;
 public class MainActivity extends ActionBarActivity {
     private final static String TAG = "__ENIGMA_JSON_FEED__";
     private static ListView listView = null;
-    private final static ArrayList<Entry> entries_array = new ArrayList<Entry>();
+    protected final static ArrayList<Entry> entries_array = new ArrayList<Entry>();
     private static Context context;
     private static String json = "";
+    private AlarmManager alarmManager = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,7 +93,16 @@ public class MainActivity extends ActionBarActivity {
         context = this;
         doStuff();
         MainActivity.context = this;
-
+        alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+        Intent feedService = new Intent(this, FeedService.class);
+        PendingIntent pendingFeedServiceIntent = PendingIntent.getService(this, 2222, feedService, PendingIntent.FLAG_CANCEL_CURRENT);
+        try {
+            //alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, 0, (AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15), pendingFeedServiceIntent);
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, 0, AlarmManager.INTERVAL_FIFTEEN_MINUTES, pendingFeedServiceIntent);
+        }catch(Exception e){
+            Log.d(TAG, "Feed don't work:\n"+ e.getMessage() + "\n" +e.getStackTrace());
+        }
+        //startService(new Intent(this, FeedService.class));
     }
 
     public static void doStuff(){
@@ -118,12 +131,25 @@ public class MainActivity extends ActionBarActivity {
         return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
-    private static class RetrieveJSONFeed extends AsyncTask<String, Void, String>{
+    public static class RetrieveJSONFeed extends AsyncTask<String, Void, String>{
         private final static String HOST = "ajax.googleapis.com";
         private final static String PATH = "ajax/services/feed/load?v=2.0&q=http%3A%2F%2Fgoo.gl%2FdfVCjV&num=20";
+        private final static int port = 80;
+
+        /*  for testing
+        private final static String HOST = "";
+        private final static String PATH = "json.json";
+        private final static int port = 81;
+        */
+
+        private boolean isService = false;
         public String doInBackground(String... params) {
             try {
-                URL url = new URL("http", HOST, 80, PATH);
+                // If argument is passed, onExecute doesn't update MainActivity's listview.
+                if(params.length == 1){
+                    isService = true;
+                }
+                URL url = new URL("http", HOST, port, PATH);
                 URLConnection conn = url.openConnection();
                 conn.connect();
                 StringBuilder builder = new StringBuilder();
@@ -136,16 +162,22 @@ public class MainActivity extends ActionBarActivity {
                 }
                 in.close();
                 MainActivity.json = builder.toString();
+                Log.d("JSON",MainActivity.json);
                 return builder.toString();
             }catch (Exception e) {
+                Log.d("Network issue", e.getMessage());
                 return "";
             }
         }
 
         public void onPostExecute(String json){
             MainActivity.update_listview();
-            BaseAdapter adapter = (BaseAdapter)listView.getAdapter();
-            adapter.notifyDataSetChanged();
+            if(!isService){
+                BaseAdapter adapter = (BaseAdapter)listView.getAdapter();
+                adapter.notifyDataSetChanged();
+            }else {
+                Log.d(TAG, "I am bloody done!");
+            }
             //MainActivity.update_listview(json);
         }
     }
@@ -184,5 +216,14 @@ public class MainActivity extends ActionBarActivity {
             Log.d(TAG, String.format("%s", e.getMessage()));
             Log.d(TAG, String.format("%s", e.getStackTrace()));
         }
+    }
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+
+        //Kills FeedService with the activity
+        Intent stopIntent = new Intent(this, FeedService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 2222, stopIntent, 0);
+        alarmManager.cancel(pendingIntent);
     }
 }
