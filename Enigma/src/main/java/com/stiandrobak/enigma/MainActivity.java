@@ -225,5 +225,10 @@ public class MainActivity extends ActionBarActivity {
         Intent stopIntent = new Intent(this, FeedService.class);
         PendingIntent pendingIntent = PendingIntent.getService(this, 2222, stopIntent, 0);
         alarmManager.cancel(pendingIntent);
+        try {
+            pendingIntent.cancel();
+        }catch (Exception e){
+            Log.d(TAG,"Maybe I shouldn't have tried to cancel it...");
+        }
     }
 }
