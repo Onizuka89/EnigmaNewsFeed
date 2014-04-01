@@ -28,6 +28,7 @@ public class FeedService extends Service{
         MainActivity.RetrieveJSONFeed jsonFeed = new MainActivity.RetrieveJSONFeed();
         jsonFeed.execute("Service");
         try {
+            // wait for feed to be downloaded, exception after 15 seconds.
             jsonFeed.get(15, TimeUnit.SECONDS);
             Log.d("DEBUG", "FeedService started.");
             if (null == alarmManager)
@@ -41,7 +42,7 @@ public class FeedService extends Service{
                     NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                             .setContentTitle(entry.title)
                             .setContentText(entry.snippet)
-                            .setSmallIcon(R.drawable.abc_ic_clear_normal);
+                            .setSmallIcon(R.drawable.enigmalogo);
                     NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     manager.notify(1, builder.build());
                 }
